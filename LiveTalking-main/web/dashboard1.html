@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体育视频解说数字人</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --background-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #212529;
+            --border-radius: 10px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding-top: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            height: 80vh;
+            border: none;
+            margin-bottom: 10px;
+            overflow: auto;
+        }
+
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            padding: 15px 20px;
+            border-bottom: none;
+        }
+
+        .video-container {
+            position: relative;
+            width: 30%;
+            height: 100%;
+            background-color: black;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        video {
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+            border-radius: var(--border-radius);
+        }
+
+        .controls-container {
+            padding: 12px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .form-control {
+            border-radius: var(--border-radius);
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .status-connected {
+            background-color: #28a745;
+        }
+
+        .status-disconnected {
+            background-color: #dc3545;
+        }
+
+        .status-connecting {
+            background-color: #ffc107;
+        }
+
+        .recording-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: rgba(220, 53, 69, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: none;
+        }
+
+        .recording-indicator.active {
+            display: flex;
+            align-items: center;
+        }
+
+        .recording-indicator .blink {
+            width: 10px;
+            height: 10px;
+            background-color: #fff;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        /* 新增上传视频区域样式 */
+        .upload-container {
+            width: 70%;
+            height: 100%;
+            padding: 0;
+            background-color: #f8f9fa;
+            border-radius: var(--border-radius);
+            margin-left: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ced4da;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        
+        .upload-area i {
+            font-size: 48px;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        
+        .upload-area p {
+            margin-bottom: 0;
+            color: #6c757d;
+        }
+        
+        .uploaded-video-container {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-grow: 1;
+            position: relative;
+        }
+        
+        .uploaded-video {
+            width: 100%;
+            height: 100%;
+            border-radius: var(--border-radius);
+            object-fit: contain;
+            background-color: #000;
+        }
+        
+        .upload-controls {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        .card-body-content {
+            display: flex;
+            height: calc(100% - 80px);
+            padding: 20px;
+        }
+        
+        .recording-pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(220, 53, 69, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">体育视频解说数字人</h1>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 视频区域 -->
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="status-indicator status-disconnected" id="connection-status"></span>
+                            <span id="status-text">未连接</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="card-body-content">
+                            <div class="video-container">
+                                <video id="video" autoplay playsinline></video>
+                                <div class="recording-indicator" id="recording-indicator">
+                                    <div class="blink"></div>
+                                    <span>录制中</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 上传视频区域 -->
+                            <div class="upload-container">
+                                <div class="upload-area" id="upload-area">
+                                    <i class="bi bi-cloud-arrow-up"></i>
+                                    <p>拖拽视频文件到此处</p>
+                                    <small class="text-muted">支持 MP4, AVI, MOV 等格式</small>
+                                    <input type="file" id="video-upload" accept="video/" style="display: none;">
+                                </div>
+
+                                <div class="uploaded-video-container" id="uploaded-video-container">
+                                    <video class="uploaded-video" id="uploaded-video" controls></video>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="controls-container">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <button class="btn btn-primary w-100" id="start">
+                                        <i class="bi bi-play-fill"></i> 开始连接
+                                    </button>
+                                    <button class="btn btn-danger w-100" id="stop" style="display: none;">
+                                        <i class="bi bi-stop-fill"></i> 停止连接
+                                    </button>
+                                </div>
+                                <div class="col-md-8 mb-3">
+                                    <div class="d-flex">
+                                        <button class="btn btn-outline-primary flex-grow-1 me-2" id="btn_start_record" disabled>
+                                            <i class="bi bi-record-fill"></i> 开始播放
+                                        </button>
+                                        <button class="btn btn-outline-primary flex-grow-1 me-2" id="btn_pause_record" disabled>
+                                            <i class="bi bi-pause-fill"></i> 暂停播放
+                                        </button>
+                                        <button class="btn btn-outline-danger flex-grow-1 me-2" id="btn_stop_record" disabled>
+                                            <i class="bi bi-stop-fill"></i> 停止播放
+                                        </button>
+                                        <button class="btn btn-outline-danger flex-grow-1" id="remove-uploaded-video" disabled>
+                                            <i class="bi bi-trash"></i> 删除
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane" id="tts" role="tabpanel" aria-labelledby="tts-tab">
+                                <form id="chat-form">
+                                    <div class="col-mb-12 mb-3">
+                                        <label for="message" class="form-label">输入比赛信息</label>
+                                        <textarea class="form-control" id="message" rows="2" placeholder="输入当前比赛信息，如选手名字、场地、日期等，若无信息则只能解析选手动作"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="bi"></i> 提交信息（api模式）
+                                    </button>
+                                </form>
+                                <div class="row">
+                                    <form id="generate-form">
+                                        <div class="col-md-12 mt-2">
+                                            <button type="submit" class="btn btn-primary w-100" id="generate">
+                                                <i class="bi"></i> 生成解说词（本地模式）
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <form id="echo-form">
+                                        <div class="col-md-12 mt-2">
+                                            <button type="submit" class="btn btn-primary w-100" id="echo">
+                                                <i class="bi"></i> 解说测试（本地模式）
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="settings-panel mt-3">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-check form-switch mb-3">
+                                            <input class="form-check-input" type="checkbox" id="use-stun">
+                                            <label class="form-check-label" for="use-stun">使用STUN服务器</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Made with flask by haoyue_moon | Frontend & Performance Optimization</p>
+        </div>
+    </div>
+
+    <!-- 隐藏的会话ID -->
+    <input type="hidden" id="sessionid" value="0">
+
+    <script src="client.js"></script>
+    <script src="srs.sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#video-size-slider').on('input', function () {
+                const value = $(this).val();
+                $('#video-size-value').text(value + '%');
+                $('#video').css('width', value + '%');
+            });
+
+            function updateConnectionStatus(status) {
+                const statusIndicator = $('#connection-status');
+                const statusText = $('#status-text');
+
+                statusIndicator.removeClass('status-connected status-disconnected status-connecting');
+
+                switch (status) {
+                    case 'connected':
+                        statusIndicator.addClass('status-connected');
+                        statusText.text('已连接');
+                        break;
+                    case 'connecting':
+                        statusIndicator.addClass('status-connecting');
+                        statusText.text('连接中...');
+                        break;
+                    case 'disconnected':
+                    default:
+                        statusIndicator.addClass('status-disconnected');
+                        statusText.text('未连接');
+                        break;
+                }
+            }
+
+            // 添加聊天消息
+            function addChatMessage(message, type = 'user') {
+                const messagesContainer = $('#chat-messages');
+                const messageClass = type === 'user' ? 'user-message' : 'system-message';
+                const sender = type === 'user' ? '您' : '数字人';
+
+                const messageElement = $(`
+                    <div class="asr-text ${messageClass}">
+                        ${sender}: ${message}
+                    </div>
+                `);
+
+                messagesContainer.append(messageElement);
+                messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+            }
+
+            // 开始/停止按钮
+            $('#start').click(function () {
+                updateConnectionStatus('connecting');
+                start();
+                $(this).hide();
+                $('#stop').show();
+
+                // 添加定时器检查视频流是否已加载
+                let connectionCheckTimer = setInterval(function () {
+                    const video = document.getElementById('video');
+                    // 检查视频是否有数据
+                    if (video.readyState >= 3 && video.videoWidth > 0) {
+                        updateConnectionStatus('connected');
+                        clearInterval(connectionCheckTimer);
+                    }
+                }, 2000); // 每2秒检查一次
+
+                // 60秒后如果还是连接中状态，就停止检查
+                setTimeout(function () {
+                    if (connectionCheckTimer) {
+                        clearInterval(connectionCheckTimer);
+                    }
+                }, 60000);
+            });
+
+            $('#stop').click(function () {
+                stop();
+                $(this).hide();
+                $('#start').show();
+                updateConnectionStatus('disconnected');
+            });
+
+
+            // WebRTC 相关功能
+            if (typeof window.onWebRTCConnected === 'function') {
+                const originalOnConnected = window.onWebRTCConnected;
+                window.onWebRTCConnected = function () {
+                    updateConnectionStatus('connected');
+                    if (originalOnConnected) originalOnConnected();
+                };
+            } else {
+                window.onWebRTCConnected = function () {
+                    updateConnectionStatus('connected');
+                };
+            }
+
+            // 当连接断开时更新状态
+            if (typeof window.onWebRTCDisconnected === 'function') {
+                const originalOnDisconnected = window.onWebRTCDisconnected;
+                window.onWebRTCDisconnected = function () {
+                    updateConnectionStatus('disconnected');
+                    if (originalOnDisconnected) originalOnDisconnected();
+                };
+            } else {
+                window.onWebRTCDisconnected = function () {
+                    updateConnectionStatus('disconnected');
+                };
+            }
+
+            // SRS WebRTC播放功能
+            var sdk = null; // 全局处理器，用于在重新发布时进行清理
+
+            function startPlay() {
+                // 关闭之前的连接
+                if (sdk) {
+                    sdk.close();
+                }
+
+                sdk = new SrsRtcWhipWhepAsync();
+                $('#video').prop('srcObject', sdk.stream);
+
+                var host = window.location.hostname;
+                var url = "http://" + host + ":1985/rtc/v1/whep/?app=live&stream=livestream";
+
+                sdk.play(url).then(function (session) {
+                    console.log('WebRTC播放已启动，会话ID:', session.sessionid);
+                }).catch(function (reason) {
+                    sdk.close();
+                    console.error('WebRTC播放失败:', reason);
+                });
+            }
+
+            // 上传视频功能
+            const uploadArea = $('#upload-area');
+            const videoUpload = $('#video-upload');
+            const uploadedVideoContainer = $('#uploaded-video-container');
+            const uploadedVideo = $('#uploaded-video');
+            const playUploadedVideoBtn = $('#btn_start_record');
+            const pauseUploadedVideoBtn = $('#btn_pause_record');
+            const stopUploadedVideoBtn = $('#btn_stop_record');
+            const removeUploadedVideoBtn = $('#remove-uploaded-video');
+
+            // 点击上传区域触发文件选择
+            uploadArea.on('click', function () {
+                videoUpload.click();
+            });
+
+            // 拖放功能
+            uploadArea.on('dragover', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).css({
+                    'border-color': '#4361ee',
+                    'background-color': 'rgba(67, 97, 238, 0.05)'
+                });
+            });
+
+            uploadArea.on('dragleave', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).css({
+                    'border-color': '#ced4da',
+                    'background-color': ''
+                });
+            });
+
+            uploadArea.on('drop', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).css({
+                    'border-color': '#ced4da',
+                    'background-color': ''
+                });
+
+                files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0) {
+                    handleVideoFile(files[0]);
+                }
+            });
+
+            // 文件选择变化
+            videoUpload.on('change', function (e) {
+                if (this.files && this.files[0]) {
+                    handleVideoFile(this.files[0]);
+                }
+            });
+
+            // 处理视频文件
+            function handleVideoFile(file) {
+                // 检查文件类型
+                if (!file.type.startsWith('video/')) {
+                    alert('请选择视频文件！');
+                    return;
+                }
+
+                const url = URL.createObjectURL(file);
+                uploadedVideo.attr('src', url);
+
+                // 显示上传的视频容器
+                uploadArea.hide();
+                uploadedVideoContainer.show();
+                $('#btn_start_record').prop('disabled', false);
+                $('#remove-uploaded-video').prop('disabled', false);
+
+                console.log('File name is:', file.name);
+            }
+
+            $('#chat-form').on('submit', function(e) {
+                e.preventDefault();
+                var message = $('#message').val();
+                if (!message.trim()) return;
+
+                console.log('Sending chat message:', message);
+
+                fetch('/human', {
+                    body: JSON.stringify({
+                        text: message,
+                        type: 'chat',
+                        interrupt: true,
+                        sessionid: parseInt(document.getElementById('sessionid').value),
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    method: 'POST'
+                });
+
+            });
+
+            $('#echo-form').on('submit', function (e) {
+                e.preventDefault();
+                var message = $('#message').val();
+                if (!message.trim()) return;
+
+                console.log('Sending echo message:', message);
+
+                fetch('/human', {
+                    body: JSON.stringify({
+                        file: files[0].name,
+                        text: message,
+                        type: 'echo',
+                        interrupt: true,
+                        sessionid: parseInt(document.getElementById('sessionid').value),
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    method: 'POST'
+                });
+            });
+
+            $('#generate-form').on('submit', function (e) {
+                e.preventDefault();
+                var message = $('#message').val();
+                if (!message.trim()) return;
+
+                console.log('Sending echo message:', message);
+
+                fetch('/generate', {
+                    body: JSON.stringify({
+                        file: files[0].name,
+                        text: message,
+                        type: 'echo',
+                        interrupt: true,
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    method: 'POST'
+                });
+            });
+
+
+                // 播放上传的视频
+                playUploadedVideoBtn.on('click', function (e) {
+                    e.preventDefault();
+                    var message = $('#message').val();
+                    if (!message.trim()) return;
+                    uploadedVideo[0].play();
+                    $('#btn_start_record').prop('disabled', true);
+                    $('#btn_pause_record').prop('disabled', false);
+                    $('#btn_stop_record').prop('disabled', false);
+                    $('#remove-uploaded-video').prop('disabled', true);
+
+                    fetch('/restart', {
+                    body: JSON.stringify({
+                        text: message,
+                        type: 'chat',
+                        interrupt: true,
+                        sessionid: parseInt(document.getElementById('sessionid').value),
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    method: 'POST'
+                    });
+
+                });
+
+                // 暂停上传的视频
+                pauseUploadedVideoBtn.on('click', function (e) {
+                    e.preventDefault();
+                    var message = $('#message').val();
+                    if (!message.trim()) return;
+                    uploadedVideo[0].pause();
+                    $('#btn_start_record').prop('disabled', false);
+                    $('#btn_pause_record').prop('disabled', true);
+                    $('#remove-uploaded-video').prop('disabled', false);
+
+                    fetch('/pause', {
+                    body: JSON.stringify({
+                        text: message,
+                        type: 'chat',
+                        interrupt: true,
+                        sessionid: parseInt(document.getElementById('sessionid').value),
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    method: 'POST'
+                    });
+
+                });
+
+                stopUploadedVideoBtn.on('click', function (e) {
+                    e.preventDefault();
+                    var message = $('#message').val();
+                    if (!message.trim()) return;
+                    uploadedVideo[0].pause();
+                    uploadedVideo[0].currentTime = 0;
+                    $('#btn_start_record').prop('disabled', false);
+                    $('#btn_pause_record').prop('disabled', true);
+                    $('#btn_stop_record').prop('disabled', true);
+                    $('#remove-uploaded-video').prop('disabled', false);
+                    fetch('/interrupt_talk', {
+                    body: JSON.stringify({
+                        text: message,
+                        type: 'chat',
+                        interrupt: true,
+                        sessionid: parseInt(document.getElementById('sessionid').value),
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    method: 'POST'
+                    });
+                });
+
+                // 删除上传的视频
+                removeUploadedVideoBtn.on('click', function () {
+                    uploadedVideo.attr('src', '');
+                    uploadArea.show();
+                    uploadedVideoContainer.hide();
+                    $('#btn_start_record').prop('disabled', true);
+                    $('#btn_pause_record').prop('disabled', true);
+                    $('#btn_stop_record').prop('disabled', true);
+                    $('#remove-uploaded-video').prop('disabled', true);
+                });
+
+        });
+    </script>
+</body>
+</html>
