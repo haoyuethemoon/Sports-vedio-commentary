@@ -1,0 +1,7 @@
+python -m tools.api_server  --listen 0.0.0.0:8080 --llama-checkpoint-path "checkpoints/openaudio-s1-mini" --decoder-checkpoint-path "checkpoints/openaudio-s1-mini/codec.pth" --decoder-config-name modded_dac_vq	#启动语音服务（在fish-speech文件夹打开命令行）
+
+
+python app.py --transport webrtc --model wav2lip --avatar_id wav2lip256_avatar1
+python app.py --transport webrtc --model wav2lip --avatar_id wav2lip256_avatar --tts fishtts --TTS_SERVER http://127.0.0.1:8080 --REF_FILE low	#启动数字人服务（在live-takingman文件夹打开命令行，并确保已经启动语音服务）
+
+http://localhost:8010/dashboard1.html	#启动WebUI（确保已经启动数字人服务）
